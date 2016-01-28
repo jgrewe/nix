@@ -191,6 +191,7 @@ h5x::DataType DataSet::dataType(void) const
     return ftype;
 }
 
+
 DataSpace DataSet::getSpace() const {
     DataSpace space = H5Dget_space(hid);
     space.check("DataSet::getSpace(): Could not obtain dataspace");
