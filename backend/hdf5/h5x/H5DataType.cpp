@@ -293,8 +293,8 @@ DataType data_type_from_h5(const h5x::DataType &dtype) {
         // if it is a compound data type then it must be a
         // property dataset, we can handle that
         int nmems = dtype.member_count();
-        // for downward reading compatibility we need to dicriminate between old
-        // and new values (6 and 2 members, resp.)
+        // for downward reading compatibility we need to accept
+        // old and new values (6 and 2 members, resp.)
         assert(nmems == 6 || nmems == 2);
         
         h5x::DataType vtype = dtype.member_type(0);

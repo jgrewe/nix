@@ -290,7 +290,6 @@ h5x::DataType PropertyHDF5::fileTypeForValue(DataType dtype)
 template<typename T>
 void do_read_value(const DataSet &h5ds, size_t size, std::vector<Value> &values)
 {
-    std::cerr << "do read value" << std::endl;
     h5x::DataType memType = h5_type_for_value<T>(true);
 
     typedef FileValue<T> file_value_t;
@@ -298,7 +297,7 @@ void do_read_value(const DataSet &h5ds, size_t size, std::vector<Value> &values)
 
     fileValues.resize(size);
     values.resize(size);
-
+    
     h5ds.read(fileValues.data(), memType, H5S_ALL, H5S_ALL);
 
     std::transform(fileValues.begin(), fileValues.end(), values.begin(), [](const file_value_t &val) {
@@ -309,34 +308,6 @@ void do_read_value(const DataSet &h5ds, size_t size, std::vector<Value> &values)
 
     h5ds.vlenReclaim(memType, fileValues.data());
 }
-
-/*
-template<typename T>
-void do_read_old_value(const DataSet &h5ds, size_t size, std::vector<Value> &values)
-{
-    h5x::DataType memType = h5_type_for_value<T>(true);
-
-    typedef FileValue<T> file_value_t;
-    std::vector<file_value_t> fileValues;
-
-    fileValues.resize(size);
-    values.resize(size);
-
-    h5ds.read(fileValues.data(), memType, H5S_ALL, H5S_ALL);
-
-    std::transform(fileValues.begin(), fileValues.end(), values.begin(), [](const file_value_t &val) {
-        Value temp(val.val());
-        temp.uncertainty = val.uncertainty;
-        temp.reference = val.reference;
-        temp.filename = val.filename;
-        temp.encoder = val.encoder;
-        temp.checksum = val.checksum;
-        return temp;
-    });
-
-    h5ds.vlenReclaim(memType, fileValues.data());
-}
-*/
 
 #define NOT_IMPLEMENTED 1
 
