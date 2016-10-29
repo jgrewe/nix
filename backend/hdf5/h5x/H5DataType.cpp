@@ -290,10 +290,13 @@ DataType data_type_from_h5(const h5x::DataType &dtype) {
     H5T_sign_t sign;
 
     if (ftclass == H5T_COMPOUND) {
-        //if it is a compound data type then it must be a
-        //a property dataset, we can handle that
+        // if it is a compound data type then it must be a
+        // property dataset, we can handle that
         int nmems = dtype.member_count();
-        assert(nmems == 6);
+        // for downward reading compatibility we need to dicriminate between old
+        // and new values (6 and 2 members, resp.)
+        assert(nmems == 6 || nmems == 2);
+        
         h5x::DataType vtype = dtype.member_type(0);
 
         ftclass = vtype.class_t();
