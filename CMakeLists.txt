@@ -1,7 +1,7 @@
 ##########################################
 # NIX CMake
 
-cmake_minimum_required (VERSION 2.8.10...3.23.1)
+cmake_minimum_required (VERSION 2.8.12...3.23.1)
 
 # Defaults
 SET(CMAKE_INSTALL_PREFIX "/usr/local" CACHE PATH "Install dir prefix")
@@ -14,7 +14,7 @@ set(VERSION_MAJOR 1)
 set(VERSION_MINOR 5)
 set(VERSION_PATCH 0)
 
-set(VERSION_ABI   1)
+set(VERSION_ABI 1)
 
 set(VERSION_FULL ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
@@ -24,7 +24,7 @@ option(BUILD_COVERAGE "Build with coverage information" OFF)
 set(HAVE_COVERAGE OFF)
 
 if(NOT WIN32)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_INIT} -std=c++11") ## Optimize
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_INIT} -std=c++14") ## Optimize
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -Wunreachable-code")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedef") # boost + clang
 
