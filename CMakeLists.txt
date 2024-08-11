@@ -14,7 +14,7 @@ set(VERSION_MAJOR 1)
 set(VERSION_MINOR 5)
 set(VERSION_PATCH 0)
 
-set(VERSION_ABI 1)
+# set(VERSION_ABI 1)
 
 set(VERSION_FULL ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
@@ -22,6 +22,9 @@ option(BUILD_STATIC "Build static version of the library" OFF)
 option(BUILD_COVERAGE "Build with coverage information" OFF)
 
 set(HAVE_COVERAGE OFF)
+
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(NOT WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_INIT} -std=c++14") ## Optimize
@@ -137,8 +140,8 @@ target_link_libraries(nixio ${LINK_LIBS})
 set_target_properties(nixio PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 set_target_properties(nixio PROPERTIES COMPILE_FLAGS "-fPIC")
 set_target_properties(nixio PROPERTIES
-                      VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
-                      SOVERSION ${VERSION_ABI})
+                      VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
+                      # SOVERSION ${VERSION_ABI})
 
 if(WIN32)
   set_target_properties(nixio PROPERTIES COMPILE_FLAGS -DNIXEXPORT)
@@ -170,6 +173,41 @@ if(CLANG_CHECK)
                     DEPENDS nixio
                     SOURCES ${nix_SOURCES})
 endif()
+
+########################################
+# GoogleTests
+
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/ff233bdd4cac0a0bf6e5cd45bda3406814cb2796.zip
+)
+
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+enable_testing()
+
+# add_executable(
+#   hello_test
+#   gtest/hello_test.cpp
+# )
+add_executable(
+  datatype_test
+  gtest/datatype_test.cpp
+)
+
+# target_link_libraries(
+#   hello_test
+#   GTest::gtest_main
+# )
+target_link_libraries(
+  datatype_test
+  GTest::gtest_main
+)
+
+include(GoogleTest)
+gtest_discover_tests(datatype_test)
 
 
 ########################################
