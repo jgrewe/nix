@@ -25,7 +25,7 @@ namespace util {
  * all inherit typedef "type" which corresponds to the type of "()".
  */
 template<typename T>
-struct Filter : public std::unary_function<T, bool> {
+struct Filter {
 
     virtual bool operator()(const T&) = 0;
 
@@ -33,7 +33,6 @@ struct Filter : public std::unary_function<T, bool> {
 
     virtual ~Filter() { }
 };
-
 
 /**
  * One Filter struct to that filters nothing but always returns true.
