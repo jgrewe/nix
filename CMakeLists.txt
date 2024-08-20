@@ -174,81 +174,25 @@ if(CLANG_CHECK)
                     SOURCES ${nix_SOURCES})
 endif()
 
-########################################
-# GoogleTests
-
-include(FetchContent)
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/ff233bdd4cac0a0bf6e5cd45bda3406814cb2796.zip
-)
-
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
-enable_testing()
-
-# add_executable(
-#   hello_test
-#   gtest/hello_test.cpp
-# )
-add_executable(
-  datatype_test
-  gtest/datatype_test.cpp
-)
-
-# target_link_libraries(
-#   hello_test
-#   GTest::gtest_main
-# )
-target_link_libraries(
-  datatype_test
-  GTest::gtest_main
-)
-
-include(GoogleTest)
-gtest_discover_tests(datatype_test)
-
 
 ########################################
 # Tests
 
-include(CTest)
+add_subdirectory(gtest)
+
+find_package(CppUnit)
+if(CppUnit_FOUND)
+    message(STATUS "CPPunit  found!")
+    add_subdirectory(test)
+else()
+    message(STATUS "CPPUNit not found. Disabling tests with cppunit")
+endif()
+
 enable_testing()
 
-if(BUILD_TESTING)
 
-  find_package(CppUnit)
-  include_directories(${CPPUNIT_INCLUDE_DIR})
-  include_directories(${CMAKE_SOURCE_DIR}/test)
-
-  file(GLOB Tests_SOURCES "test/*Test*.[ch]pp")
-  file(GLOB Real_Test_HEADERS "test/Test*.hpp")
-
-  foreach(thebackend ${backends})
-    set(thebackend_TEST_HEADERS)
-    file(GLOB thebackend_TEST_HEADERS "test/${thebackend}/Test*.hpp")
-    list(APPEND Real_Test_HEADERS ${thebackend_TEST_HEADERS})
-
-    set(thebackend_TEST_SOURCES)
-    file(GLOB thebackend_TEST_SOURCES "test/${thebackend}/*Test*.[ch]pp")
-    list(APPEND Tests_SOURCES ${thebackend_TEST_SOURCES})
-  endforeach()
-
-  foreach(test ${Real_Test_HEADERS})
-      get_filename_component(TestFileName ${test} NAME_WE)
-      string(REPLACE "Test" "" TestName ${TestFileName})
-      message(STATUS " Test added: ${TestName}")
-      add_test(${TestName} TestRunner ${TestName})
-  endforeach(test)
-
-  add_executable(TestRunner test/Runner.cpp ${Tests_SOURCES})
-  if(NOT WIN32)
-    set_target_properties(TestRunner PROPERTIES COMPILE_FLAGS "-Wno-deprecated-declarations")
-  endif()
-  target_link_libraries(TestRunner ${CPPUNIT_LIBRARIES} nixio)
-
-endif()
+########################################
+# Benchmarking
 
 add_executable(nix-bench EXCLUDE_FROM_ALL test/Benchmark.cpp)
 target_link_libraries(nix-bench nixio)
@@ -276,7 +220,7 @@ set(GIT_REV_SHORT "unknown")
 
 find_package(Git)
 if(GIT_FOUND)
-  message("git found: ${GIT_EXECUTABLE}")
+  message(STATUS "git found: ${GIT_EXECUTABLE}")
   execute_process(
     COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
     WORKING_DIRECTORY "${local_dir}"
