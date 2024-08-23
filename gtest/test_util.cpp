@@ -48,6 +48,7 @@ TEST(TestUtil, testUnitScaling) {
     EXPECT_TRUE(util::getSIScaling("mV","kV") == 1e-6);
     EXPECT_TRUE(util::getSIScaling("V","kV") == 1e-03);
     EXPECT_TRUE(util::getSIScaling("kV","V") == 1e+03);
+
     EXPECT_THROW(util::getSIScaling("mV^2","V"), nix::InvalidUnit);
     EXPECT_TRUE(util::getSIScaling("V^2","V^2") == 1.0);
     EXPECT_TRUE(util::getSIScaling("V","mV") == 1e+03);
@@ -104,8 +105,8 @@ TEST(TestUtil, testIsCompoundSIUnit) {
     EXPECT_TRUE(util::isCompoundSIUnit(unit_3));
     EXPECT_TRUE(!util::isCompoundSIUnit(unit_4));
 }
-/*
-void TestUtil::testSplitCompoundUnit() {
+
+TEST(TestUtil, testSplitCompoundUnit) {
     string unit = "mV/cm^2*kg*V";
     string unit_2 = "mOhm/m";
     string unit_3 = "mV";
@@ -125,7 +126,7 @@ void TestUtil::testSplitCompoundUnit() {
     EXPECT_TRUE(atomic_units_3[0] == unit_3);
 }
 
-void TestUtil::testConvertToSeconds() {
+TEST(TestUtil, testConvertToSeconds) {
     string unit_min = "min";
     string unit_h = "h";
     string unit_s = "s";
@@ -135,16 +136,16 @@ void TestUtil::testConvertToSeconds() {
     double h_value = 12.25;
     double s_value = 100;
     int64_t m_value = 25;
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(1530.0, util::convertToSeconds(unit_min, min_value), std::numeric_limits<double>::round_error());
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(44100.0, util::convertToSeconds(unit_h, h_value), std::numeric_limits<double>::round_error());
+    EXPECT_NEAR(1530.0, util::convertToSeconds(unit_min, min_value), std::numeric_limits<double>::round_error());
+    EXPECT_NEAR(44100.0, util::convertToSeconds(unit_h, h_value), std::numeric_limits<double>::round_error());
     EXPECT_TRUE(1500 == util::convertToSeconds(unit_min, m_value));
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(s_value, util::convertToSeconds(unit_s, s_value), std::numeric_limits<double>::round_error());
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(s_value/1000., util::convertToSeconds(unit_ms, s_value), std::numeric_limits<double>::round_error());
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(s_value*1000000., util::convertToSeconds(unit_Ms, s_value), std::numeric_limits<double>::round_error());
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(s_value, util::convertToSeconds("std", s_value), std::numeric_limits<double>::round_error());
+    EXPECT_NEAR(s_value, util::convertToSeconds(unit_s, s_value), std::numeric_limits<double>::round_error());
+    EXPECT_NEAR(s_value/1000., util::convertToSeconds(unit_ms, s_value), std::numeric_limits<double>::round_error());
+    EXPECT_NEAR(s_value*1000000., util::convertToSeconds(unit_Ms, s_value), std::numeric_limits<double>::round_error());
+    EXPECT_NEAR(s_value, util::convertToSeconds("std", s_value), std::numeric_limits<double>::round_error());
 }
 
-void TestUtil::testConvertToKelvin() {
+TEST(TestUtil, testConvertToKelvin) {
     string unit_f = "°F";
     string unit_f2 = "F";
     string unit_c = "°C";
@@ -154,25 +155,25 @@ void TestUtil::testConvertToKelvin() {
     string unit_Mk = "MK";
     string unit_k2 ="°K" ;
     double temperature = 100.0;
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(373.15, util::convertToKelvin(unit_c, temperature), std::numeric_limits<double>::round_error());
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(373.15, util::convertToKelvin(unit_c2, temperature), std::numeric_limits<double>::round_error());
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(311.0, round(util::convertToKelvin(unit_f, temperature)), std::numeric_limits<double>::round_error());
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(311.0, round(util::convertToKelvin(unit_f2, temperature)), std::numeric_limits<double>::round_error());
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(temperature, util::convertToKelvin(unit_k, temperature), std::numeric_limits<double>::round_error());
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(temperature, util::convertToKelvin(unit_k2, temperature), std::numeric_limits<double>::round_error());
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(temperature/1000., util::convertToKelvin(unit_mk, temperature), std::numeric_limits<double>::round_error());
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(temperature*1000000., util::convertToKelvin(unit_Mk, temperature), std::numeric_limits<double>::round_error());
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(temperature, util::convertToKelvin("kelvin", temperature), std::numeric_limits<double>::round_error());
+    EXPECT_NEAR(373.15, util::convertToKelvin(unit_c, temperature), std::numeric_limits<double>::round_error());
+    EXPECT_NEAR(373.15, util::convertToKelvin(unit_c2, temperature), std::numeric_limits<double>::round_error());
+    EXPECT_NEAR(311.0, round(util::convertToKelvin(unit_f, temperature)), std::numeric_limits<double>::round_error());
+    EXPECT_NEAR(311.0, round(util::convertToKelvin(unit_f2, temperature)), std::numeric_limits<double>::round_error());
+    EXPECT_NEAR(temperature, util::convertToKelvin(unit_k, temperature), std::numeric_limits<double>::round_error());
+    EXPECT_NEAR(temperature, util::convertToKelvin(unit_k2, temperature), std::numeric_limits<double>::round_error());
+    EXPECT_NEAR(temperature/1000., util::convertToKelvin(unit_mk, temperature), std::numeric_limits<double>::round_error());
+    EXPECT_NEAR(temperature*1000000., util::convertToKelvin(unit_Mk, temperature), std::numeric_limits<double>::round_error());
+    EXPECT_NEAR(temperature, util::convertToKelvin("kelvin", temperature), std::numeric_limits<double>::round_error());
     int temp_fi = 100;
     EXPECT_TRUE(util::convertToKelvin(unit_f, temp_fi) == 311);
 }
 
-void TestUtil::testUnitSanitizer() {
+TEST(TestUtil, testUnitSanitizer) {
     std::string unit = " mul/µs ";
     EXPECT_TRUE(util::unitSanitizer(unit) == "ul/us");
 }
 
-void TestUtil::testDimTypeToStr() {
+TEST(TestUtil, testDimTypeToStr) {
     std::string r("Range");
     std::string set("Set");
     std::string sam("Sample");
@@ -181,7 +182,7 @@ void TestUtil::testDimTypeToStr() {
     EXPECT_TRUE(sam.compare(util::dimTypeToStr(nix::DimensionType::Sample)) == 0);
 }
 
-void TestUtil::testChecks() {
+TEST(TestUtil, testChecks) {
     EXPECT_THROW(util::checkEntityName("invalid/entity/name"), InvalidName);
     EXPECT_THROW(util::checkEntityName(""), EmptyString);
     EXPECT_NO_THROW(util::checkEntityName("valid name"));
@@ -190,7 +191,7 @@ void TestUtil::testChecks() {
     EXPECT_NO_THROW(util::checkEntityType("valid type"));
 }
 
-void TestUtil::testStringVectors() {
+TEST(TestUtil, testStringVectors) {
     std::vector<std::string> vec_a{"", "A", "b", "", "C"};
     std::vector<std::string> vec_b{"", "D", "E", "F", "G"};
     std::vector<std::string> vec_c{"", "H", "E", "", "J"};
@@ -200,4 +201,4 @@ void TestUtil::testStringVectors() {
     EXPECT_TRUE(util::isSetAtSamePos(vec_a, vec_c));
     EXPECT_TRUE(!util::isSetAtSamePos(vec_a, vec_d));
 }
-*/
+
