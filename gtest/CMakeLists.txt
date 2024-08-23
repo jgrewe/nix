@@ -9,11 +9,10 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-if(BUILD_TESTING)
 
+if(BUILD_TESTING)
   file(GLOB GTEST_SOURCES "test_*.cpp")
 
-  # Add an executable for each test file
   foreach(test_src ${GTEST_SOURCES})
     get_filename_component(test_name ${test_src} NAME_WE)
     add_executable(${test_name} ${test_src})
