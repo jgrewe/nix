@@ -1,0 +1,464 @@
+// Copyright (c) 2013-2024, German Neuroinformatics Node (G-Node)
+//
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted under the terms of the BSD License. See
+// LICENSE file in the root of the Project.
+#include <gtest/gtest.h>
+
+#include <nix/hydra/multiArray.hpp>
+#include <nix/valid/validator.hpp>
+#include <nix/valid/checks.hpp>
+#include <nix/valid/conditions.hpp>
+#include <nix/valid/validate.hpp>
+#include <nix.hpp>
+
+#include <ctime>
+#include <functional>
+#include <numeric>
+#include <math.h>
+
+#include <boost/math/constants/constants.hpp>
+
+using namespace nix;
+using namespace valid;
+using namespace std;
+
+struct tag_tmp {
+    std::vector<std::string> units_ref;
+
+    tag_tmp() : units_ref(std::vector<std::string>()) {}
+    tag_tmp(std::vector<std::string> units) : units_ref(units) {}
+
+    std::vector<std::string> units() const {
+        return units_ref;
+    }
+
+    std::string unit() const {
+        return units_ref.front();
+    }
+
+    boost::optional<std::string> unito() const {
+        boost::optional<std::string> ret = units_ref.front();
+        return ret;
+    }
+};
+
+class TestValidate : public testing::Test {
+
+    protected:
+    time_t startup_time;
+
+    nix::File file;
+    nix::Block block;
+    nix::DataArray array1;
+    nix::DataArray array2;
+    nix::DataArray array3;
+    nix::DataArray array4;
+    nix::DataArray array5;
+    nix::DataFrame frame1;
+    std::vector<nix::DataArray> refs;
+    std::vector<double> extent, position;
+    nix::DataArray positions;
+    nix::DataArray extents;
+    std::vector<std::string> atomic_units;
+    std::vector<std::string> compound_units;
+    std::vector<std::string> invalid_units;
+    nix::MultiTag mtag;
+    nix::Tag tag;
+    tag_tmp units_tmp;
+    nix::SetDimension dim_set1;
+    nix::SetDimension dim_set2;
+    nix::SetDimension dim_set3;
+    nix::SampledDimension dim_sample1;
+    nix::SampledDimension dim_sample2;
+    nix::SampledDimension dim_sample3;
+    nix::RangeDimension dim_range1;
+    nix::RangeDimension dim_range2;
+    nix::RangeDimension dim_range3;
+    nix::DataFrameDimension dim_frame1;
+
+    void setValid() {
+        // fill sinus data & leave it in file for plot testing
+        typedef boost::multi_array<double, 2> array2D_type;
+        typedef array2D_type::index index;
+        array2D_type sin_array(boost::extents[1000][1000]);
+        const double PI = boost::math::constants::pi<double>();
+        for (index i = 0; i < 1000; ++i) {
+            for (index j = 0; j < 1000; ++j) {
+                sin_array[i][j] = std::sin(PI * j / std::sqrt((i>0)?i:1));
+            }
+        }
+        array4.setData(sin_array);
+        array4.deleteDimensions();
+        array4.appendSampledDimension(1.);
+        array4.appendSetDimension();
+        // fill array1 & array2
+        typedef boost::multi_array<double, 3> array_type;
+        typedef array_type::index index;
+        array_type A(boost::extents[3][4][2]);
+        int values = 0;
+        for (index i = 0; i != 3; ++i)
+            for (index j = 0; j != 4; ++j)
+                for (index k = 0; k != 2; ++k)
+                    A[i][j][k] = values++;
+        array1.setData(A);
+        array2.setData(A);
+        array2.deleteDimensions();
+        dim_range1 = array2.appendRangeDimension({1, 2, 3});
+        dim_range2 = array2.appendRangeDimension({1, 2, 3, 4});
+        dim_range3 = array2.appendRangeDimension({1, 2});
+
+        array3.setData(A);
+
+        // fill extent & position
+        extent.resize(3);
+        position.resize(3);
+        std::iota(std::begin(extent), std::end(extent), 0);
+        std::iota(std::begin(position), std::end(position), 0);
+
+        // fill extents & positions
+        array2D_type B(boost::extents[5][3]);
+        for (index i = 0; i < 5; ++i) {
+            for (index j = 0; j < 3; ++j) {
+                B[i][j] = 100.0*i;
+            }
+        }
+        positions.setData(B);
+
+        array2D_type C(boost::extents[5][3]);
+        for (index i = 0; i < 5; ++i) {
+            for (index j = 0; j < 3; ++j) {
+                C[i][j] = 100.0*i;
+            }
+        }
+        extents.setData(C);
+
+        // ensure correct dimension descriptors for positions
+        positions.deleteDimensions();
+        positions.appendSetDimension();
+        positions.appendSetDimension();
+        extents.deleteDimensions();
+        extents.appendSetDimension();
+        extents.appendSetDimension();
+
+        // fill MultiTag
+        refs = {array2, array3};
+        mtag.units(atomic_units);
+        // fill Tag
+        tag.extent(extent);
+        tag.position(position);
+        tag.units(atomic_units);
+        // fill dimensions
+        dim_set1.labels({"label_a", "label_b", "label_c"});
+        dim_set2.labels({"label_a", "label_b", "label_c", "label_d"});
+        dim_set3.labels({"label_a", "label_b"});
+        dim_range1.unit(atomic_units[0]);
+        dim_range2.unit(atomic_units[1]);
+        dim_range3.unit(atomic_units[2]);
+        dim_sample1.unit(atomic_units[0]);
+        dim_sample2.unit(atomic_units[1]);
+        dim_sample3.unit(atomic_units[2]);
+        // fill tag_tmp
+        units_tmp = tag_tmp(compound_units);
+
+        // fill array5
+        size_t count = 10;
+        std::vector<double> array5_data(count);
+        for (size_t i = 0; i < count; ++i)
+            array5_data[i] = i * 3.14;
+        array5.setData(array5_data);
+        // fill data frame
+        frame1.rows(count);
+        std::vector<nix::Variant> vals(1);
+        for (size_t i = 0; i < count; ++i) {
+            vals[0].set(i * 2.5);
+            frame1.writeRow(i, vals);
+        }
+        return;
+    }
+
+    void setInvalid() {
+        // fill array1 & array2
+        typedef boost::multi_array<double, 3> array_type;
+        typedef array_type::index index;
+        array_type A(boost::extents[3][4][2]);
+        int values = 0;
+        for (index i = 0; i != 3; ++i)
+            for (index j = 0; j != 4; ++j)
+                for (index k = 0; k != 2; ++k)
+                    A[i][j][k] = values++;
+        array1.setData(A);
+        array2.setData(A);
+        array3.setData(A);
+
+        // fill extent & position
+        extent.resize(6);
+        position.resize(9);
+        std::iota(std::begin(extent), std::end(extent), 0);
+        std::iota(std::begin(position), std::end(position), 0);
+
+        // fill extents & positions
+        typedef boost::multi_array<double, 2> array2D_type;
+        typedef array2D_type::index index;
+        array2D_type B(boost::extents[4][2]);
+        for (index i = 0; i < 4; ++i) {
+            for (index j = 0; j < 2; ++j) {
+                B[i][j] = 100.0*i;
+            }
+        }
+        extents.setData(B);
+        array2D_type C(boost::extents[5][2]);
+        for (index i = 0; i < 5; ++i) {
+            for (index j = 0; j < 2; ++j) {
+                C[i][j] = 100.0*i;
+            }
+        }
+        positions.setData(C);
+        // fill MultiTag
+        refs = {array1, array2};
+        mtag.units(atomic_units);
+        // fill Tag
+        tag.extent(extent);
+        tag.position(position);
+        tag.units(atomic_units);
+        // fill dimensions
+        dim_set3.labels({"label_a", "label_b", "label_c"});
+        dim_set1.labels({"label_a", "label_b", "label_c", "label_d"});
+        dim_set2.labels({"label_a", "label_b"});
+        dim_range3.ticks({1, 2, 3});
+        dim_range1.ticks({1, 2, 3, 4});
+        dim_range2.ticks({1, 2});
+        dim_sample3.unit(atomic_units[0]);
+        dim_sample1.unit(atomic_units[1]);
+        dim_sample2.unit(atomic_units[2]);
+        // fill tag_tmp
+        units_tmp = tag_tmp(invalid_units);
+        // remove dimension descriptors from array4, position and extents
+        array4.deleteDimensions();
+        positions.deleteDimensions();
+        extents.deleteDimensions();
+
+        // fill array5
+        size_t count = 10;
+        std::vector<double> array5_data(count);
+        for (size_t i = 0; i < count; ++i)
+            array5_data[i] = i * 3.14;
+        array5.setData(array5_data);
+        // fill data frame
+        frame1.rows(count - 5);
+        std::vector<nix::Variant> vals(1);
+        for (size_t i = 0; i < count - 5; ++i) {
+            vals[0].set(i * 2.5);
+            frame1.writeRow(i, vals);
+        }
+        return;
+    }
+
+    TestValidate() {
+        startup_time = time(NULL);
+        // create file & block
+        file = nix::File::open("test_validate.h5", nix::FileMode::Overwrite);
+        block = file.createBlock("block_one", "dataset");
+        // create data array
+        array1 = block.createDataArray("array_one", "testdata", nix::DataType::Double, nix::NDSize({ 0, 0, 0 }));
+        array2 = block.createDataArray("array_two", "testdata", nix::DataType::Double, nix::NDSize({ 0, 0, 0 }));
+        array3 = block.createDataArray("array_three", "testdata", nix::DataType::Double, nix::NDSize({ 0, 0, 0 }));
+        array4 = block.createDataArray("array_four", "sindata", nix::DataType::Double, nix::NDSize({ 0, 0}));
+        array5 = block.createDataArray("array_five", "dftest", nix::DataType::Double, nix::NDSize{ 0 });
+        // create data frame
+        std::vector<nix::Column> cols = {{"current", "nA", nix::DataType::Double}};
+        frame1 = block.createDataFrame("frame_one", "conditions", cols);
+        // set references vector
+        refs = {array2, array3};
+        // create positions & extents arrays
+        positions = block.createDataArray("positions_DataArray", "dataArray", DataType::Double, nix::NDSize({ 0, 0 }));
+        extents = block.createDataArray("extents_DataArray", "dataArray", DataType::Double, nix::NDSize({ 0, 0 }));
+        // create units
+        atomic_units = {"m", "cm", "mm"};
+        compound_units = {"mV*cm", "m*s", "s/cm"};
+        invalid_units = {"foo"};
+        // create multi tag & tag
+        mtag = block.createMultiTag("tag_one", "test_tag", positions);
+        mtag.extents(extents);
+        mtag.references(refs);
+        tag = block.createTag("tag_one", "test_tag", {0.0, 2.0, 3.4});
+        tag.references(refs);
+        units_tmp = tag_tmp(compound_units);
+        // create dimensions
+        dim_set1 = array1.appendSetDimension();
+        dim_set2 = array1.appendSetDimension();
+        dim_set3 = array1.appendSetDimension();
+        dim_range1 = array2.appendRangeDimension({1, 2, 3});
+        dim_range2 = array2.appendRangeDimension({1, 2, 3, 4});
+        dim_range3 = array2.appendRangeDimension({1, 2});
+        dim_sample1 = array3.appendSampledDimension(42);
+        dim_sample2 = array3.appendSampledDimension(42);
+        dim_sample3 = array3.appendSampledDimension(42);
+        dim_frame1 = array5.appendDataFrameDimension(frame1);
+    }
+};
+
+
+
+TEST_F(TestValidate, test) {
+    // check if nix::getEntityName works correctly
+    // this is here because there is currently no better place
+    // and we only use that function in the validation code
+    boost::optional<std::string> name = nix::getEntityName(block);
+    EXPECT_TRUE(!!name);
+    EXPECT_EQ(*name, block.name());
+
+    name = nix::getEntityName(file);
+    EXPECT_TRUE(!name);
+
+    valid::Message m1("w1", "meh", std::string("michi"));
+    EXPECT_EQ(m1.id, std::string("w1"));
+    EXPECT_EQ(m1.msg, std::string("meh"));
+    EXPECT_TRUE(!!m1.name);
+    EXPECT_EQ(std::string("michi"), *m1.name);
+
+    // test result class
+    valid::Result res;
+    EXPECT_EQ(false, res.hasWarnings());
+    EXPECT_EQ(false, res.hasErrors());
+    EXPECT_EQ(true, res.ok());
+
+    valid::Message w1("0xWARN", "You have been warned!");
+    valid::Message e1("0xERR", "Told you so!");
+
+    res.addWarning(w1);
+    EXPECT_EQ(false, res.hasErrors());
+    EXPECT_EQ(true, res.hasWarnings());
+
+    res.addError(e1);
+    EXPECT_EQ(true, res.hasErrors());
+    EXPECT_EQ(true, res.hasWarnings());
+
+    std::stringstream out;
+    out << res;
+    std::string outs = out.str();
+
+    EXPECT_TRUE(outs.find("0xWARN") != std::string::npos);
+    EXPECT_TRUE(outs.find("0xERR") != std::string::npos);
+    EXPECT_TRUE(outs.find("You have been warned!") != std::string::npos);
+    EXPECT_TRUE(outs.find("Told you so!") != std::string::npos);
+
+    // dummy class to test empty checks
+    class fooC {
+    public:
+        std::string getFoo () const { return std::string("I'm not empty!"); };
+        std::string getBar () const { return std::string(); };
+        std::vector<int> getSorted () const { return std::vector<int>({1, 2, 3}); };
+        std::vector<int> getUnsorted () const { return std::vector<int>({3, 1, 2}); };
+    };
+
+    std::vector<std::string> vect = {"foo", "bar"};
+    std::vector<std::string> vect2;
+    fooC foobar;
+
+    // success cases----------------------------------------------------
+    // -----------------------------------------------------------------
+    valid::Result myResult = validator({
+        could(vect, &std::vector<std::string>::empty, isFalse(), {
+            must(vect, &std::vector<std::string>::size, notSmaller(2), "notSmaller(2)") }),
+        must(vect, &std::vector<std::string>::size, notSmaller(2), "notSmaller(2)"),
+        must(vect2, &std::vector<std::string>::size, isSmaller(2), "isSmaller(2)"),
+        should(vect, &std::vector<std::string>::size, notGreater(2), "notGreater(2)"),
+        should(vect, &std::vector<std::string>::size, isGreater(0), "isGreater(0)"),
+        must(vect, &std::vector<std::string>::size, notEqual<size_t>(0), "notEqual<size_t>(0)"),
+        should(vect, &std::vector<std::string>::size, isEqual<size_t>(2), "isEqual<size_t>(2)"),
+        must(vect2, &std::vector<std::string>::size, isFalse(), "isFalse()"),
+        must(foobar, &fooC::getFoo, notEmpty(), "notEmpty()"),
+        should(foobar, &fooC::getBar, isEmpty(), "isEmpty()"),
+        should(foobar, &fooC::getSorted, isSorted(), "isSorted()")
+    });
+    // have debug info
+    // std::cout << myResult;
+    EXPECT_EQ(true, myResult.ok());
+    EXPECT_EQ(false, myResult.hasWarnings());
+    EXPECT_EQ(false, myResult.hasErrors());
+
+    // failure cases----------------------------------------------------
+    // -----------------------------------------------------------------
+    myResult = validator({
+        could(vect, &std::vector<std::string>::empty, isFalse(), {
+            must(vect, &std::vector<std::string>::size, notSmaller(3), "notSmaller(3)") }),
+        must(vect, &std::vector<std::string>::size, notSmaller(3), "notSmaller(3)"),
+        must(vect2, &std::vector<std::string>::size, isSmaller(0), "isSmaller(0)"),
+        should(vect, &std::vector<std::string>::size, notGreater(1), "notGreater(1)"),
+        should(vect, &std::vector<std::string>::size, isGreater(2), "isGreater(2)"),
+        must(vect, &std::vector<std::string>::size, notEqual<size_t>(2), "notEqual<size_t>(2)"),
+        should(vect, &std::vector<std::string>::size, isEqual<size_t>(0), "isEqual<size_t>(0)"),
+        must(vect2, &std::vector<std::string>::size, notFalse(), "notFalse()"),
+        must(foobar, &fooC::getFoo, isEmpty(), "notEmpty()"),
+        should(foobar, &fooC::getBar, notEmpty(), "isEmpty()"),
+        should(foobar, &fooC::getUnsorted, isSorted(), "isSorted()")
+    });
+    // uncomment this to have debug info
+    // std::cout << myResult;
+    EXPECT_TRUE(myResult.getWarnings().size() == 5);
+    EXPECT_TRUE(myResult.getErrors().size() == 6);
+
+    // entity success cases---------------------------------------------
+    // -----------------------------------------------------------------
+    setValid();
+    myResult = validator({
+        could(mtag, &nix::MultiTag::positions, dimEquals(2), {
+            must(mtag, &nix::MultiTag::extents, dimEquals(2), "dimEquals(2)") }),
+        must(  mtag,   &nix::MultiTag::extents, dimEquals(2), "dimEquals(2)"),
+        should(array1, &nix::DataArray::dimensions, dimLabelsMatchData(array1), "dimLabelsMatchData(array)"),
+        must(  array2, &nix::DataArray::dimensions, dimTicksMatchData(array2),  "dimTicksMatchData(array)"),
+        must(  array5, &nix::DataArray::dimensions, dimDataFrameTicksMatchData(array5), "dimDataFrameTicksMatchData(array)"),
+
+        should(dim_range1, &nix::RangeDimension::unit, isAtomicUnit(), "isAtomicUnit(); (dim_range1)"),
+        should(tag,       &nix::Tag::units,     isAtomicUnit(), "isAtomicUnit(); (tag)"),
+        must(units_tmp, &tag_tmp::unit,  isCompoundUnit(), "isCompoundUnit(); (units_tmp.unit)"),
+        must(units_tmp, &tag_tmp::units, isCompoundUnit(), "isCompoundUnit(); (units_tmp.units)"),
+        must(units_tmp, &tag_tmp::unito, isCompoundUnit(), "isCompoundUnit(); (units_tmp.unito)"),
+        should(units_tmp, &tag_tmp::unit,  isValidUnit(), "isValidUnit(); (units_tmp.unit)"),
+        must(  units_tmp, &tag_tmp::units, isValidUnit(), "isValidUnit(); (units_tmp.units)"),
+        should(units_tmp, &tag_tmp::unito, isValidUnit(), "isValidUnit(); (units_tmp.unito)"),
+        must(tag, &nix::Tag::references, tagUnitsMatchRefsUnits(atomic_units), "tagUnitsMatchRefsUnits(atomic_units); (tag)")
+    });
+    // have debug info
+    // std::cout << myResult;
+    EXPECT_EQ(false, myResult.hasWarnings());
+    EXPECT_EQ(false, myResult.hasErrors());
+
+    myResult = file.validate();
+    EXPECT_EQ(static_cast<size_t>(0), myResult.getWarnings().size());
+    EXPECT_EQ(static_cast<size_t>(0), myResult.getErrors().size());
+    // entity failure cases---------------------------------------------
+    // -----------------------------------------------------------------
+
+    setInvalid();
+    myResult = validator({
+        could(mtag, &nix::MultiTag::positions, dimEquals(2), {
+            must(mtag, &nix::MultiTag::extents, dimEquals(42), "dimEquals(42)") }),//
+        must(  mtag,   &nix::MultiTag::extents, dimEquals(42), "dimEquals(42)"),//
+        should(array1, &nix::DataArray::dimensions, dimLabelsMatchData(array1), "dimLabelsMatchData(array)"),
+        must(array5, &nix::DataArray::dimensions, dimDataFrameTicksMatchData(array5), "dimDataFrameTicksMatchData(array"),
+        must(units_tmp, &tag_tmp::unit,  isAtomicUnit(), "isAtomicUnit(); (units_tmp.unit)"),
+        must(units_tmp, &tag_tmp::units, isAtomicUnit(), "isAtomicUnit(); (units_tmp.units)"),
+        must(units_tmp, &tag_tmp::unit,  isCompoundUnit(), "isCompoundUnit(); (units_tmp.unit)"),
+        must(units_tmp, &tag_tmp::units, isCompoundUnit(), "isCompoundUnit(); (units_tmp.units)"),
+        must(units_tmp, &tag_tmp::unito, isCompoundUnit(), "isCompoundUnit(); (units_tmp.unito)"),
+        should(units_tmp, &tag_tmp::unit,  isValidUnit(), "isValidUnit(); (units_tmp.unit)"),
+        must(  units_tmp, &tag_tmp::units, isValidUnit(), "isValidUnit(); (units_tmp.units)"),
+        should(units_tmp, &tag_tmp::unito, isValidUnit(), "isValidUnit(); (units_tmp.unito)"),
+        must(tag, &nix::Tag::references, tagUnitsMatchRefsUnits(invalid_units), "tagUnitsMatchRefsUnits(atomic_units); (tag)")
+    });
+    // std::cout << myResult;
+    EXPECT_TRUE(myResult.getWarnings().size() == 3);
+    EXPECT_TRUE(myResult.getErrors().size() == 10);
+
+    myResult = file.validate();
+    // std::cout << myResult;
+    EXPECT_EQ(static_cast<size_t>(0), myResult.getWarnings().size());
+    EXPECT_EQ(static_cast<size_t>(6), myResult.getErrors().size());
+
+    // lets leave the file clean & valid
+    setValid();
+}

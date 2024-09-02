@@ -2,16 +2,14 @@ include(FetchContent)
 FetchContent_Declare(
   googletest
   URL https://github.com/google/googletest/archive/ff233bdd4cac0a0bf6e5cd45bda3406814cb2796.zip
-  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 
 # For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-
 if(BUILD_TESTING)
-  file(GLOB GTEST_SOURCES "test_*.cpp")
+  file(GLOB GTEST_SOURCES "*test_*.cpp")
 
   foreach(test_src ${GTEST_SOURCES})
     get_filename_component(test_name ${test_src} NAME_WE)
