@@ -248,6 +248,7 @@ namespace valid {
         bool operator()(const std::vector<std::string> &u) const {
             return isUnit::operator()(u, *this);
         }
+        virtual ~isValidUnit() {}
     };
 
     /**
@@ -268,6 +269,7 @@ namespace valid {
         bool operator()(const std::vector<std::string> &u) const {
             return isUnit::operator()(u, *this);
         }
+        virtual ~isAtomicUnit() {}
     };
 
     /**
@@ -288,6 +290,7 @@ namespace valid {
         bool operator()(const std::vector<std::string> &u) const {
             return isUnit::operator()(u, *this);
         }
+        virtual ~isCompoundUnit() {}
     };
 
     /**
