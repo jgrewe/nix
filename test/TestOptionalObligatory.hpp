@@ -79,7 +79,7 @@ namespace test {
         enum { value = sizeof(func<T>(0)) == sizeof(char) };
     };
     #define ACCEPTS(M) \
-        static const METHOD_NAME M = static_cast<METHOD_NAME>(__COUNTER__ + 1); \
+        struct M {}; \
         template<typename T> \
         class accepts_noneT<T, M> \
         { \
