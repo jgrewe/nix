@@ -84,6 +84,8 @@ class NIXAPI SampledDimension : public base::ImplContainer<base::ISampledDimensi
 
 public:
 
+    using base::ImplContainer<base::ISampledDimension>::operator=;
+
     /**
      * @brief Constructor that creates an uninitialized SampledDimension.
      *
@@ -408,14 +410,6 @@ public:
     SampledDimension& operator=(const Dimension &other);
 
     /**
-     * @brief Assignment operator for none.
-     */
-    SampledDimension &operator=(const none_t &t) {
-        ImplContainer::operator=(t);
-        return *this;
-    }
-
-    /**
      * @brief Returns the position at the given index
      *
      * @see positionAt for more information.
@@ -705,6 +699,8 @@ class NIXAPI SetDimension : public base::ImplContainer<base::ISetDimension> {
 
 public:
 
+    using base::ImplContainer<base::ISetDimension>::operator=;
+
     /**
      * @brief Constructor that creates an uninitialized SetDimension.
      *
@@ -894,13 +890,6 @@ public:
      */
     SetDimension& operator=(const Dimension &other);
 
-    /**
-     * @brief Assignment operator for none.
-     */
-    SetDimension &operator=(const none_t &t) {
-        ImplContainer::operator=(t);
-        return *this;
-    }
 
 };
 
@@ -917,6 +906,8 @@ public:
 class NIXAPI RangeDimension : public base::ImplContainer<base::IRangeDimension> {
 
 public:
+
+    using base::ImplContainer<base::IRangeDimension>::operator=;
 
     /**
      * @brief Constructor that creates an uninitialized RangeDimension.
@@ -1269,14 +1260,6 @@ public:
     RangeDimension& operator=(const Dimension &other);
 
     /**
-     * @brief Assignment operator for none.
-     */
-    RangeDimension &operator=(const none_t &t) {
-        ImplContainer::operator=(t);
-        return *this;
-    }
-
-    /**
      * @brief Returns the position at the given index
      *
      * @see positionAt for more information.
@@ -1300,6 +1283,8 @@ public:
 class NIXAPI Dimension : public base::ImplContainer<base::IDimension> {
 
 public:
+
+    using base::ImplContainer<base::IDimension>::operator=;
 
     /**
      * @brief Constructor that creates an uninitialized Dimension.
@@ -1455,14 +1440,6 @@ public:
      */
     Dimension &operator=(const Dimension &other)  {
         ImplContainer::operator=(other);
-        return *this;
-    }
-
-    /**
-     * @brief Assignment operator for none.
-     */
-    Dimension &operator=(const none_t &t) {
-        ImplContainer::operator=(t);
         return *this;
     }
 

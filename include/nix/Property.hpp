@@ -36,6 +36,8 @@ class NIXAPI Property : public base::Entity<base::IProperty> {
 
 public:
 
+    using base::Entity<base::IProperty>::operator=;
+
     /**
      * @brief Constructor that creates an uninitialized Property.
      *
@@ -257,14 +259,6 @@ public:
      * equal, and < 0 otherwise.
      */
     int compare(const Property &other) const;
-
-    /**
-     * @brief Assignment operator for none.
-     */
-    Property &operator=(const none_t &t) {
-        ImplContainer::operator=(t);
-        return *this;
-    }
 
     /**
      * @brief Copy-assignment operator.

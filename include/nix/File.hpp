@@ -25,6 +25,8 @@ class NIXAPI File : public base::ImplContainer<base::IFile> {
 
 public:
 
+    using base::ImplContainer<base::IFile>::operator=;
+
     /**
      * @brief Constructor that creates an uninitialized File.
      *
@@ -504,20 +506,13 @@ public:
     }
 
     /**
-     * @brief Assignment operator for none.
-     */
-    File &operator=(const none_t &t) {
-        ImplContainer::operator=(t);
-        return *this;
-    }
-
-    /**
      * @brief Copy-assignment operator.
      */
     File &operator=(const File &other)  {
         ImplContainer::operator=(other);
         return *this;
     }
+
     //------------------------------------------------------
     // Validate
     //------------------------------------------------------
