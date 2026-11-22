@@ -17,7 +17,7 @@
 #include <numeric>
 #include <cfloat>
 
-#include <boost/boost::optional.hpp>
+// #include <boost/boost::optional.hpp>
 
 using namespace std;
 
@@ -49,12 +49,12 @@ void scalePositions(const vector<double> &starts, const vector<double> &ends,
 }
 
 
-vector<boost::boost::optional<pair<ndsize_t, ndsize_t>>> positionToIndex(const vector<double> &start_positions,
+vector<boost::optional<pair<ndsize_t, ndsize_t>>> positionToIndex(const vector<double> &start_positions,
                                                            const vector<double> &end_positions,
                                                            const vector<string> &units,
                                                            const RangeMatch range_matching,
                                                            const Dimension &dimension) {
-    vector<boost::boost::optional<pair<ndsize_t, ndsize_t>>> indices;
+    vector<boost::optional<pair<ndsize_t, ndsize_t>>> indices;
     if (dimension.dimensionType() == DimensionType::Sample) {
         SampledDimension dim;
         dim = dimension;
@@ -80,7 +80,7 @@ vector<pair<ndsize_t, ndsize_t>> positionToIndex(const vector<double> &start_pos
                                                  const vector<double> &end_positions,
                                                  const vector<string> &units,
                                                  const SampledDimension &dimension) {
-    vector<boost::boost::optional<pair<ndsize_t, ndsize_t>>> opt_ranges = positionToIndex(start_positions, end_positions, units, RangeMatch::Inclusive, dimension);
+    vector<boost::optional<pair<ndsize_t, ndsize_t>>> opt_ranges = positionToIndex(start_positions, end_positions, units, RangeMatch::Inclusive, dimension);
     vector<pair<ndsize_t, ndsize_t>> ranges;
     for (auto o : opt_ranges) {
         if (o) {
@@ -92,7 +92,7 @@ vector<pair<ndsize_t, ndsize_t>> positionToIndex(const vector<double> &start_pos
     return ranges;
 }
 
-vector<boost::boost::optional<pair<ndsize_t, ndsize_t>>> positionToIndex(const vector<double> &start_positions,
+vector<boost::optional<pair<ndsize_t, ndsize_t>>> positionToIndex(const vector<double> &start_positions,
                                                            const vector<double> &end_positions,
                                                            const vector<string> &units,
                                                            const RangeMatch range_matching,
@@ -109,14 +109,14 @@ vector<boost::boost::optional<pair<ndsize_t, ndsize_t>>> positionToIndex(const v
 }
 
 
-vector<boost::boost::optional<pair<ndsize_t, ndsize_t>>> positionToIndex(const vector<double> &start_positions,
+vector<boost::optional<pair<ndsize_t, ndsize_t>>> positionToIndex(const vector<double> &start_positions,
                                                            const vector<double> &end_positions,
                                                            const RangeMatch range_matching,
                                                            const SetDimension &dimension) {
     if (start_positions.size() != end_positions.size()) {
         throw std::runtime_error("util::positionToIndex: Invalid numbers of start and end positions!");
     }
-    vector<boost::boost::optional<pair<ndsize_t, ndsize_t>>> indices = dimension.indexOf(start_positions, end_positions, range_matching);
+    vector<boost::optional<pair<ndsize_t, ndsize_t>>> indices = dimension.indexOf(start_positions, end_positions, range_matching);
     return indices;
 }
 
@@ -125,7 +125,7 @@ vector<pair<ndsize_t, ndsize_t>> positionToIndex(const vector<double> &start_pos
                                                  const vector<string> &units,
                                                  const SetDimension &dimension) {
     vector<pair<ndsize_t, ndsize_t>> indices;
-    vector<boost::boost::optional<pair<ndsize_t, ndsize_t>>> opt_indices = positionToIndex(start_positions, end_positions, RangeMatch::Inclusive, dimension);
+    vector<boost::optional<pair<ndsize_t, ndsize_t>>> opt_indices = positionToIndex(start_positions, end_positions, RangeMatch::Inclusive, dimension);
     for (auto o : opt_indices) {
         if (!o) {
             throw nix::OutOfBounds("util::positionToIndex: An invalid range was encountered!");
@@ -136,7 +136,7 @@ vector<pair<ndsize_t, ndsize_t>> positionToIndex(const vector<double> &start_pos
 }
 
 
-vector<boost::boost::optional<pair<ndsize_t, ndsize_t>>> positionToIndex(const vector<double> &start_positions,
+vector<boost::optional<pair<ndsize_t, ndsize_t>>> positionToIndex(const vector<double> &start_positions,
                                                            const vector<double> &end_positions,
                                                            const vector<string> &units,
                                                            const RangeMatch range_matching,
@@ -157,7 +157,7 @@ vector<pair<ndsize_t, ndsize_t>> positionToIndex(const vector<double> &start_pos
                                                  const vector<double> &end_positions,
                                                  const vector<string> &units,
                                                  const RangeDimension &dimension) {
-    vector<boost::boost::optional<pair<ndsize_t, ndsize_t>>> opt_ranges = positionToIndex(start_positions, end_positions, units, RangeMatch::Inclusive, dimension);
+    vector<boost::optional<pair<ndsize_t, ndsize_t>>> opt_ranges = positionToIndex(start_positions, end_positions, units, RangeMatch::Inclusive, dimension);
     vector<pair<ndsize_t, ndsize_t>> ranges;
     for (auto o : opt_ranges) {
         if (o) {
@@ -181,8 +181,8 @@ vector<boost::optional<pair<ndsize_t, ndsize_t>>> positionToIndex(const vector<d
 }
 
 
-boost::boost::optional<ndsize_t> positionToIndex(double position, const string &unit, const PositionMatch match, const Dimension &dimension) {
-    boost::boost::optional<ndsize_t> pos;
+boost::optional<ndsize_t> positionToIndex(double position, const string &unit, const PositionMatch match, const Dimension &dimension) {
+    boost::optional<ndsize_t> pos;
     if (dimension.dimensionType() == DimensionType::Sample) {
         SampledDimension dim;
         dim = dimension;
@@ -206,16 +206,16 @@ boost::boost::optional<ndsize_t> positionToIndex(double position, const string &
 
 
 ndsize_t positionToIndex(double position, const string &unit, const SampledDimension &dimension) {
-    boost::boost::optional<ndsize_t> index = positionToIndex(position, unit, PositionMatch::GreaterOrEqual, dimension);
+    boost::optional<ndsize_t> index = positionToIndex(position, unit, PositionMatch::GreaterOrEqual, dimension);
     if (!index) {
-        throw nix::OutOfBounds("util::positionToIndex: An invalid position was encoutered!");
+        throw nix::OutOfBounds("util::positionToIndex: An invalid position was encountered!");
     }
     return *index;
 }
 
-boost::boost::optional<ndsize_t> positionToIndex(double position, const string &unit, const PositionMatch match, const SampledDimension &dimension) {
-    boost::boost::optional<ndsize_t> index;
-    boost::boost::optional<string> dim_unit = dimension.unit();
+boost::optional<ndsize_t> positionToIndex(double position, const string &unit, const PositionMatch match, const SampledDimension &dimension) {
+    boost::optional<ndsize_t> index;
+    boost::optional<string> dim_unit = dimension.unit();
     double scaling = 1.0;
     if (!dim_unit && unit != "none") {
         throw IncompatibleDimensions("Position is given with a unit, the dimension has none!",
@@ -235,15 +235,15 @@ boost::boost::optional<ndsize_t> positionToIndex(double position, const string &
 
 
 ndsize_t positionToIndex(double position, const string &unit, const SetDimension &dimension) {
-    boost::boost::optional<ndsize_t> index = positionToIndex(position, PositionMatch::GreaterOrEqual, dimension);
+    boost::optional<ndsize_t> index = positionToIndex(position, PositionMatch::GreaterOrEqual, dimension);
     if (!index) {
         throw nix::OutOfBounds("util::positionToIndex: An invalid position was encoutered!");
     }
     return *index;
 }
 
-boost::boost::optional<ndsize_t> positionToIndex(double position, const PositionMatch match, const SetDimension &dimension) {
-    boost::boost::optional<ndsize_t> index = dimension.indexOf(position, match);
+boost::optional<ndsize_t> positionToIndex(double position, const PositionMatch match, const SetDimension &dimension) {
+    boost::optional<ndsize_t> index = dimension.indexOf(position, match);
     return index;
 }
 
@@ -255,14 +255,14 @@ boost::optional<ndsize_t> positionToIndex(double position, const PositionMatch p
 
 
 ndsize_t positionToIndex(double position, const string &unit, const RangeDimension &dimension) {
-    boost::boost::optional<ndsize_t> index = positionToIndex(position, unit, PositionMatch::GreaterOrEqual, dimension);
+    boost::optional<ndsize_t> index = positionToIndex(position, unit, PositionMatch::GreaterOrEqual, dimension);
     if (!index) {
         throw nix::OutOfBounds("PositionToIndex: An invalid index was encountered");
     }
     return *index;
 }
 
-boost::boost::optional<ndsize_t> positionToIndex(double position, const string &unit, const PositionMatch position_match, const RangeDimension &dimension) {
+boost::optional<ndsize_t> positionToIndex(double position, const string &unit, const PositionMatch position_match, const RangeDimension &dimension) {
     string dim_unit = dimension.unit() ? *dimension.unit() : "none";
     double scaling = 1.0;
     if (unit != "none") {
@@ -273,7 +273,7 @@ boost::boost::optional<ndsize_t> positionToIndex(double position, const string &
                                          "nix::util::positionToIndex");
         }
     }
-    boost::boost::optional<ndsize_t> index = dimension.indexOf(position * scaling, position_match);
+    boost::optional<ndsize_t> index = dimension.indexOf(position * scaling, position_match);
     return index;
 }
 
@@ -386,13 +386,13 @@ void getOffsetAndCount(const Tag &tag, const DataArray &array, NDSize &offset, N
     NDSize temp_offset(position.size());
     NDSize temp_count(position.size(), 1);
     for (size_t i = 0; i < position.size(); ++i) {
-        vector<boost::boost::optional<pair<ndsize_t, ndsize_t>>> ranges = positionToIndex({position[i]},
+        vector<boost::optional<pair<ndsize_t, ndsize_t>>> ranges = positionToIndex({position[i]},
                                                                              {position[i] + extent[i]},
                                                                              {units[i]},
                                                                              match,
                                                                              dimensions[i]);
         if (!ranges[0]) {
-            boost::boost::optional<ndsize_t> ofst = positionToIndex(position[i], units[i], PositionMatch::GreaterOrEqual, dimensions[i]);
+            boost::optional<ndsize_t> ofst = positionToIndex(position[i], units[i], PositionMatch::GreaterOrEqual, dimensions[i]);
             if (extent[i] != 0. || !ofst) {
                 throw nix::OutOfBounds("util::offsetAndCount:An invalid range was encountered!");
             }
@@ -476,10 +476,10 @@ void getOffsetAndCount(const MultiTag &tag, const DataArray &array, const vector
         }
     }
 
-    vector<vector<boost::boost::optional<pair<ndsize_t, ndsize_t>>>> data_indices;
+    vector<vector<boost::optional<pair<ndsize_t, ndsize_t>>>> data_indices;
     for (size_t dim_index = 0; dim_index < dimensions.size(); ++dim_index) {
         vector<string> temp_units(start_positions[dim_index].size(), units[dim_index]);
-        vector<boost::boost::optional<pair<ndsize_t, ndsize_t>>> ranges = positionToIndex(start_positions[dim_index], end_positions[dim_index],
+        vector<boost::optional<pair<ndsize_t, ndsize_t>>> ranges = positionToIndex(start_positions[dim_index], end_positions[dim_index],
                                                                             temp_units, match, dimensions[dim_index]);
                                                                           
         data_indices.push_back(ranges);
@@ -490,14 +490,14 @@ void getOffsetAndCount(const MultiTag &tag, const DataArray &array, const vector
         NDSize data_offset(dimcount_sizet, 0);
         NDSize data_count(dimcount_sizet, 1);
         for (size_t dim_index =0; dim_index < dimensions.size(); ++dim_index) { // for each dimension
-            boost::boost::optional<pair<ndsize_t, ndsize_t>> opt_range = data_indices[dim_index][i];
+            boost::optional<pair<ndsize_t, ndsize_t>> opt_range = data_indices[dim_index][i];
             if (opt_range) {
                 data_offset[dim_index] = (*opt_range).first;
                 ndsize_t count =  (*opt_range).second - (*opt_range).first;
                 data_count[dim_index] += count;
             } else {
                 if (end_positions[dim_index][i] == start_positions[dim_index][i]) {
-                    boost::boost::optional<ndsize_t> ofst = positionToIndex(end_positions[dim_index][i], units[dim_index], PositionMatch::GreaterOrEqual, dimensions[dim_index]);
+                    boost::optional<ndsize_t> ofst = positionToIndex(end_positions[dim_index][i], units[dim_index], PositionMatch::GreaterOrEqual, dimensions[dim_index]);
                     if (!ofst) {
                         throw nix::OutOfBounds("util::offsetAndCount:An invalid range was encountered!");
                     }
