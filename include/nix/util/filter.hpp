@@ -30,8 +30,6 @@ struct Filter {
     typedef T argument_type;
     typedef bool result_type;
 
-    virtual ~Filter() {}
-
     virtual bool operator()(const T&) = 0;
 
     typedef std::function<bool(const T&)> type;
